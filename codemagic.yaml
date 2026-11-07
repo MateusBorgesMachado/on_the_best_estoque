@@ -1,0 +1,58 @@
+workflows:
+  ios-release-testflight:
+    name: iOS TestFlight Build
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      groups:
+        - app-store-connect-credentials # Vincule seu grupo de variáveis se tiver, ou deixe as chaves direto abaixo
+      vars:
+        APP_STORE_CONNECT_ISSUER_ID: "ab41af41-1d81-4d60-9daa-2f827346303d" # Substitua pelo seu Issuer ID
+        APP_STORE_CONNECT_KEY_ID: "9TKL7QJ9UV" # Substitua pelo seu Key ID
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'main'
+          include: true
+    scripts:
+      - name: Set up code signing settings
+        script: |
+          # Inicializa o chaveiro do Mac para receber os certificados
+          keychain initialize
+      - name: Fetch signing files from Apple
+        script: |
+          # Baixa EXCLUSIVAMENTE o perfil de App Store, ignorando desenvolvimento/ad-hoc
+          app-store-connect fetch-signing-files br.com.brgsystem.onthebest \
+            --create \
+            --type IOS_APP_STORE \
+            --platform IOS \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --key-id "$APP_STORE_CONNECT_KEY_ID"
+      - name: Fix Bundle ID and Clean Cache
+        script: |
+          echo "Corrigindo Bundle ID nos arquivos do projeto..."
+          find ios/ -type f -name "*.pbxproj" -exec sed -i '' 's/com.example.onTheBestEstoque/br.com.brgsystem.onthebest/g' {} +
+          find ios/ -type f -name "*.plist" -exec sed -i '' 's/com.example.onTheBestEstoque/br.com.brgsystem.onthebest/g' {} +
+          
+          echo "Limpando caches do Flutter..."
+          flutter clean
+          flutter pub get
+      - name: Set up code signing profiles in Xcode
+        script: |
+          # Vincula os certificados baixados ao Xcode da máquina virtual
+          xcode-project use-profiles
+      - name: Build Flutter iOS IPA
+        script: |
+          # Compila o app explicitamente no modo de distribuição da App Store
+          flutter build ipa --release \
+            --bundle-name="onTheBestEstoque" \
+            --export-options-plist=/Users/builder/export_options.plist
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Envia o app automaticamente para o TestFlight assim que o build terminar
+        submit_to_testflight: true 
