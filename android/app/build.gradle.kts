@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.on_the_best_estoque"
+    namespace = "br.com.brgsystem.on_the_best_estoque"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
