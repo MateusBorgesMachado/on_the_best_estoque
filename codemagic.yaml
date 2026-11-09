@@ -4,50 +4,47 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m1
     integrations:
-      app_store_connect: "App de estoque exclusivo onthebest" 
+      app_store_connect: "App de estoque exclusivo onthebest"
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: br.com.brgsystem.onthebest
       vars:
-        APP_STORE_CONNECT_ISSUER_ID: "ab41af41-1d81-4d60-9daa-2f827346303d"
-        APP_STORE_CONNECT_KEY_ID: "9TKL7QJ9UV"
+        BUNDLE_ID: br.com.brgsystem.onthebest
     triggering:
       events:
         - push
       branch_patterns:
-        - pattern: 'main'
+        - pattern: "main"
           include: true
     scripts:
-      - name: Set up code signing settings
-        script: |
-          keychain initialize
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Install CocoaPods dependencies
+        script: find . -name "Podfile" -execdir pod install \;
+      - name: Set up keychain
+        script: keychain initialize
       - name: Fetch signing files from Apple
         script: |
-          app-store-connect fetch-signing-files br.com.brgsystem.onthebest \
-            --create \
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --platform IOS \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --key-id "$APP_STORE_CONNECT_KEY_ID"
-      - name: Fix Bundle ID and Clean Cache
-        script: |
-          echo "Corrigindo Bundle ID nos arquivos do projeto..."
-          find ios/ -type f -name "*.pbxproj" -exec sed -i '' 's/com.example.onTheBestEstoque/br.com.brgsystem.onthebest/g' {} +
-          find ios/ -type f -name "*.plist" -exec sed -i '' 's/com.example.onTheBestEstoque/br.com.brgsystem.onthebest/g' {} +
-          
-          echo "Limpando caches do Flutter..."
-          flutter clean
-          flutter pub get
-      - name: Set up code signing profiles in Xcode
-        script: |
-          xcode-project use-profiles
-      - name: Build Flutter iOS IPA
+            --create \
+            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY
+      - name: Add certificates to keychain
+        script: keychain add-certificates
+      - name: Set up code signing settings on Xcode project
+        script: xcode-project use-profiles
+      - name: Flutter build ipa
         script: |
           flutter build ipa --release \
-            --bundle-name="onTheBestEstoque" \
             --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
     publishing:
       app_store_connect:
         auth: integration
-        submit_to_testflight: true 
+        submit_to_testflight: true
