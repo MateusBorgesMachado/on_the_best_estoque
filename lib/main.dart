@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:on_the_best_estoque/utils/main_navigator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.manual,
+    overlays: [SystemUiOverlay.bottom],
+  );
   await Supabase.initialize(
     url: 'https://rrmohnvpsfxzcflxfohf.supabase.co',
     publishableKey: 'sb_publishable_OTn9yw64zzGRgplhzcyuyA_Dv356ExV',
