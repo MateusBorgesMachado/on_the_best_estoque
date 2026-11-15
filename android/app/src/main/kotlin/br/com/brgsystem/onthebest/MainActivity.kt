@@ -1,4 +1,4 @@
-package com.example.on_the_best_estoque
+package br.com.brgsystem.onthebest
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "br.com.brgsystem.on_the_best_estoque"
+    namespace = "br.com.brgsystem.onthebest"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -15,7 +15,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.on_the_best_estoque"
+        applicationId = "br.com.brgsystem.onthebest"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
